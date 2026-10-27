@@ -12,8 +12,11 @@ from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 
 from ert.config import (
+    AutoHookedWorkflowConfigs,
+    ErtScriptWorkflow,
     ForwardModelStepDocumentation,
     ForwardModelStepPlugin,
+    HookRuntime,
     KnownQueueOptions,
     LegacyWorkflowConfigs,
     LocalQueueOptions,
@@ -321,6 +324,11 @@ class ErtPluginManager(pluggy.PluginManager):
         self.hook.legacy_ertscript_workflow(config=config)
         return config
 
+    def get_auto_hooked_workflows(self) -> AutoHookedWorkflowConfigs:
+        config = AutoHookedWorkflowConfigs()
+        self.hook.auto_hooked_workflows(config=config)
+        return config
+
     def add_logging_handle_to_root(
         self, logger: logging.Logger
     ) -> list[logging.Handler]:
@@ -365,6 +373,7 @@ class ErtRuntimePlugins(BaseModel, extra="forbid"):
         default_factory=dict
     )
     installed_workflow_jobs: Mapping[str, WorkflowJob] = Field(default_factory=dict)
+    auto_hooked_workflows: dict[str, HookRuntime] = Field(default_factory=dict)
     queue_options: KnownQueueOptions | None = Field(
         default_factory=LocalQueueOptions, discriminator="name"
     )
@@ -398,6 +407,23 @@ def get_site_plugins(
         wf_job = workflow_job_from_file(job_path, origin="site")
         all_workflow_jobs[wf_job.name] = wf_job
 
+    all_auto_hooked_workflows = (
+        plugin_manager.get_auto_hooked_workflows().get_workflows()
+    )
+    auto_hooked_workflows: dict[str, HookRuntime] = {}
+    for name, auto_hook in all_auto_hooked_workflows.items():
+        if name in all_workflow_jobs:
+            raise ValueError(
+                f"Auto-hooked workflow {name!r} conflicts with an installed "
+                "workflow job"
+            )
+        all_workflow_jobs[name] = ErtScriptWorkflow(
+            name=name,
+            ert_script=auto_hook.ert_script,
+            category="plugin",
+        )
+        auto_hooked_workflows[name] = auto_hook.hook_runtime
+
     for fm_step_subclass in plugin_manager.forward_model_steps:
         # we call without required arguments to
         # ForwardModelStepPlugin.__init__ as
@@ -409,6 +435,7 @@ def get_site_plugins(
     return ErtRuntimePlugins(
         installed_forward_model_steps=all_forward_model_steps,
         installed_workflow_jobs=all_workflow_jobs,
+        auto_hooked_workflows=auto_hooked_workflows,
         queue_options=site_configurations.queue_options
         if site_configurations
         else None,

@@ -5,8 +5,10 @@ import warnings
 from argparse import ArgumentParser
 from collections.abc import Callable
 
+from pydantic import BaseModel
+
 from .ert_script import ErtScript
-from .parsing import SchemaItemType
+from .parsing import HookRuntime, SchemaItemType
 from .workflow_job import ErtScriptWorkflow
 
 logger = logging.getLogger(__name__)
@@ -100,6 +102,43 @@ class LegacyErtScriptWorkflow:
     @parser.setter
     def parser(self, value: Callable[[], ArgumentParser] | None) -> None:
         self._workflow_configs.parsers[self.name] = value
+
+
+class AutoHookedWorkflow(BaseModel):
+    name: str
+    ert_script: type[ErtScript]
+    hook_runtime: HookRuntime
+
+
+class AutoHookedWorkflowConfigs:
+    def __init__(self) -> None:
+        self._workflows: list[AutoHookedWorkflow] = []
+
+    def add_workflow(
+        self,
+        ert_script: type[ErtScript],
+        hook_runtime: HookRuntime,
+        name: str = "",
+    ) -> None:
+
+        workflow = AutoHookedWorkflow(
+            name=name,
+            hook_runtime=hook_runtime,
+            ert_script=ert_script,
+        )
+        self._workflows.append(workflow)
+
+    def get_workflows(self) -> dict[str, AutoHookedWorkflow]:
+        configs = {}
+        for workflow in self._workflows:
+            if workflow.name in configs:
+                logger.info(
+                    f"Duplicate auto-hooked workflow name: {workflow.name}, "
+                    f"skipping {workflow.ert_script}"
+                )
+            else:
+                configs[workflow.name] = workflow
+        return configs
 
 
 class WorkflowConfigs:

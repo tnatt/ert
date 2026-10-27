@@ -607,6 +607,7 @@ def workflows_from_dict(
     content_dict: ConfigDict,
     substitutions: dict[str, str],
     site_installed_workflows_jobs: Mapping[str, WorkflowJob] | None = None,
+    auto_hooked_workflows: Mapping[str, HookRuntime] | None = None,
 ) -> tuple[
     dict[str, WorkflowJob],
     dict[str, Workflow],
@@ -628,6 +629,17 @@ def workflows_from_dict(
         workflow_jobs,
         substitutions,
     )
+
+    if auto_hooked_workflows:
+        for workflow_name, hook_runtime in auto_hooked_workflows.items():
+            hooked_workflows.setdefault(hook_runtime, []).append(
+                Workflow(
+                    name=workflow_name,
+                    src_file="<auto-hooked>",
+                    cmd_list=[(workflow_jobs[workflow_name], [])],
+                )
+            )
+
     return workflow_jobs, workflows, hooked_workflows
 
 
@@ -849,6 +861,7 @@ class ErtConfig(BaseModel, extra="forbid"):
         Mapping[str, SiteInstalledForwardModelStep]
     ] = {}
     PREINSTALLED_WORKFLOWS: ClassVar[dict[str, WorkflowJob]] = {}
+    AUTO_HOOKED_WORKFLOWS: ClassVar[dict[str, Any]] = {}
     ENV_PR_FM_STEP: ClassVar[dict[str, dict[str, Any]]] = {}
     ENV_VARIABLES: ClassVar[dict[str, str]] = {}
     QUEUE_OPTIONS: ClassVar[KnownQueueOptions | None] = None
@@ -981,6 +994,7 @@ class ErtConfig(BaseModel, extra="forbid"):
                 Mapping[str, SiteInstalledForwardModelStep]
             ] = runtime_plugins.installed_forward_model_steps
             PREINSTALLED_WORKFLOWS = dict(runtime_plugins.installed_workflow_jobs)
+            AUTO_HOOKED_WORKFLOWS = dict(runtime_plugins.auto_hooked_workflows)
             ENV_PR_FM_STEP: ClassVar[dict[str, dict[str, Any]]] = (
                 uppercase_subkeys_and_stringify_subvalues(
                     {k: dict(v) for k, v in runtime_plugins.env_pr_fm_step.items()}
@@ -1089,7 +1103,10 @@ class ErtConfig(BaseModel, extra="forbid"):
 
         try:
             workflow_jobs, workflows, hooked_workflows = workflows_from_dict(
-                config_dict, substitutions, cls.PREINSTALLED_WORKFLOWS
+                config_dict,
+                substitutions,
+                cls.PREINSTALLED_WORKFLOWS,
+                cls.AUTO_HOOKED_WORKFLOWS,
             )
         except ConfigValidationError as e:
             errors.append(e)

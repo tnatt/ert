@@ -67,7 +67,11 @@ from .summary_config import SummaryConfig
 from .summary_key_data import SummaryKeyData, make_summary_key_data
 from .surface_config import SurfaceConfig
 from .workflow import Workflow
-from .workflow_config import LegacyWorkflowConfigs, WorkflowConfigs
+from .workflow_config import (
+    AutoHookedWorkflowConfigs,
+    LegacyWorkflowConfigs,
+    WorkflowConfigs,
+)
 from .workflow_fixtures import (
     HookedWorkflowFixtures,
     PostExperimentFixtures,
@@ -92,6 +96,7 @@ from .workflow_job import (
 __all__ = [
     "AnalysisConfig",
     "AnalysisModule",
+    "AutoHookedWorkflowConfigs",
     "BaseErtScriptWorkflow",
     "BreakthroughConfig",
     "CircleShapeConfig",
