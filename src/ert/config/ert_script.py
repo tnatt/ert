@@ -10,6 +10,7 @@ from types import MappingProxyType, ModuleType
 from typing import Any
 
 from ._capture_output import capturing
+from .parsing import HookRuntime
 from .workflow_fixtures import (
     WorkflowFixtures,
     all_hooked_workflow_fixtures,
@@ -35,6 +36,7 @@ class ErtScript:
     """
 
     stop_on_fail = False
+    auto_hook: HookRuntime | None = None
 
     def __init__(
         self,

@@ -117,7 +117,6 @@ class WorkflowConfigs:
         examples: str | None = None,
         parser: Callable[[], ArgumentParser] | None = None,
         category: str = "other",
-        auto_hook: HookRuntime | None = None,
     ) -> None:
         """
         :param category: dot separated string
@@ -130,7 +129,7 @@ class WorkflowConfigs:
         workflow = ErtScriptWorkflow(
             name=name or ert_script.__name__,
             ert_script=ert_script,
-            auto_hook=auto_hook,
+            auto_hook=ert_script.auto_hook,
             description=description,
             examples=examples,
             category=category,
@@ -179,6 +178,7 @@ class LegacyWorkflowConfigs(WorkflowConfigs):
         workflow = ErtScriptWorkflow(
             name=name or ert_script.__name__,
             ert_script=ert_script,
+            auto_hook=ert_script.auto_hook,
             description=description,
             examples=examples,
             category=category,
