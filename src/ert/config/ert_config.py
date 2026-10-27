@@ -590,6 +590,29 @@ def create_and_hook_workflows(
         except ConfigValidationError as err:
             errors.append(err)
 
+    for workflow_name, workflow_job in workflow_jobs.items():
+        hook_runtime = getattr(workflow_job, "auto_hook", None)
+        if hook_runtime is None:
+            continue
+
+        auto_hooked_runtime_workflow = Workflow(
+            name=workflow_name,
+            src_file="<auto-hooked>",
+            cmd_list=[(workflow_job, [])],
+        )
+        errors.extend(
+            _validate_fixtures(
+                workflow_name,
+                auto_hooked_runtime_workflow,
+                hook_runtime,
+            )
+        )
+        declared_hooks[hook_runtime].append(
+            _DeclaredHook(
+                _declaration_order_of(workflow_name), auto_hooked_runtime_workflow
+            )
+        )
+
     if errors:
         raise ConfigValidationError.from_collected(errors)
 

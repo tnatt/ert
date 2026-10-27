@@ -31,6 +31,7 @@ from .parse_arg_types_list import parse_arg_types_list
 from .parsing import (
     ConfigDict,
     ConfigWarning,
+    HookRuntime,
     SchemaItemType,
     WorkflowJobKeys,
     init_workflow_job_schema,
@@ -214,6 +215,7 @@ class SiteInstalledErtScriptWorkflow(BaseErtScriptWorkflow):
 
     type: Literal["site_installed"] = "site_installed"
     ert_script: builtins.type[ErtScript] = None  # type: ignore
+    auto_hook: HookRuntime | None = None
     description: str = ""
     examples: str | None = None
     category: str = "other"

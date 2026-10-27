@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 from collections.abc import Callable
 
 from .ert_script import ErtScript
-from .parsing import SchemaItemType
+from .parsing import HookRuntime, SchemaItemType
 from .workflow_job import ErtScriptWorkflow
 
 logger = logging.getLogger(__name__)
@@ -117,6 +117,7 @@ class WorkflowConfigs:
         examples: str | None = None,
         parser: Callable[[], ArgumentParser] | None = None,
         category: str = "other",
+        auto_hook: HookRuntime | None = None,
     ) -> None:
         """
         :param category: dot separated string
@@ -129,6 +130,7 @@ class WorkflowConfigs:
         workflow = ErtScriptWorkflow(
             name=name or ert_script.__name__,
             ert_script=ert_script,
+            auto_hook=auto_hook,
             description=description,
             examples=examples,
             category=category,
