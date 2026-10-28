@@ -104,15 +104,9 @@ class LegacyErtScriptWorkflow:
         self._workflow_configs.parsers[self.name] = value
 
 
-class AutoHookedWorkflow(BaseModel):
-    name: str
-    ert_script: type[ErtScript]
-    hook_runtime: HookRuntime
-
-
 class AutoHookedWorkflowConfigs:
     def __init__(self) -> None:
-        self._workflows: list[AutoHookedWorkflow] = []
+        self._workflows: list[ErtScriptWorkflow] = []
 
     def add_workflow(
         self,
@@ -121,14 +115,15 @@ class AutoHookedWorkflowConfigs:
         name: str = "",
     ) -> None:
 
-        workflow = AutoHookedWorkflow(
+        workflow = ErtScriptWorkflow(
             name=name,
-            hook_runtime=hook_runtime,
             ert_script=ert_script,
+            category="plugin",
+            auto_hook=hook_runtime,
         )
         self._workflows.append(workflow)
 
-    def get_workflows(self) -> dict[str, AutoHookedWorkflow]:
+    def get_workflows(self) -> dict[str, ErtScriptWorkflow]:
         configs = {}
         for workflow in self._workflows:
             if workflow.name in configs:

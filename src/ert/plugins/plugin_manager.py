@@ -397,32 +397,17 @@ def get_site_plugins(
         else {}
     )
 
-    all_workflow_jobs: dict[str, WorkflowJob] = dict[str, WorkflowJob](
-        plugin_manager.get_ertscript_workflows().get_workflows()
-    ) | dict[str, WorkflowJob](
-        plugin_manager.get_legacy_ertscript_workflows().get_workflows()
+    all_workflow_jobs: dict[str, WorkflowJob] = (
+        dict[str, WorkflowJob](plugin_manager.get_ertscript_workflows().get_workflows())
+        | dict[str, WorkflowJob](
+            plugin_manager.get_legacy_ertscript_workflows().get_workflows()
+        )
+        | plugin_manager.get_auto_hooked_workflows().get_workflows()
     )
 
     for job_path in installable_workflow_jobs.values():
         wf_job = workflow_job_from_file(job_path, origin="site")
         all_workflow_jobs[wf_job.name] = wf_job
-
-    all_auto_hooked_workflows = (
-        plugin_manager.get_auto_hooked_workflows().get_workflows()
-    )
-    auto_hooked_workflows: dict[str, HookRuntime] = {}
-    for name, auto_hook in all_auto_hooked_workflows.items():
-        if name in all_workflow_jobs:
-            raise ValueError(
-                f"Auto-hooked workflow {name!r} conflicts with an installed "
-                "workflow job"
-            )
-        all_workflow_jobs[name] = ErtScriptWorkflow(
-            name=name,
-            ert_script=auto_hook.ert_script,
-            category="plugin",
-        )
-        auto_hooked_workflows[name] = auto_hook.hook_runtime
 
     for fm_step_subclass in plugin_manager.forward_model_steps:
         # we call without required arguments to
@@ -435,7 +420,6 @@ def get_site_plugins(
     return ErtRuntimePlugins(
         installed_forward_model_steps=all_forward_model_steps,
         installed_workflow_jobs=all_workflow_jobs,
-        auto_hooked_workflows=auto_hooked_workflows,
         queue_options=site_configurations.queue_options
         if site_configurations
         else None,

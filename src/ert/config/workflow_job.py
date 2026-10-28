@@ -24,6 +24,7 @@ from pydantic_core.core_schema import ValidationInfo
 from typing_extensions import TypedDict
 
 from ert.base_model_context import BaseModelWithContextSupport
+from ert.config.parsing.hook_runtime import HookRuntime
 
 from .ert_plugin import ErtPlugin
 from .ert_script import ErtScript
@@ -217,6 +218,7 @@ class SiteInstalledErtScriptWorkflow(BaseErtScriptWorkflow):
     description: str = ""
     examples: str | None = None
     category: str = "other"
+    auto_hook: HookRuntime | None = None
 
     @model_serializer(mode="plain")
     def serialize_model(self) -> _SerializedSiteInstalledErtScriptWorkflow:
