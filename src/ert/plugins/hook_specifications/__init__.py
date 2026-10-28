@@ -4,6 +4,7 @@ from .forward_model_steps import (
 )
 from .help_resources import help_links
 from .jobs import (
+    auto_hooked_workflows,
     ertscript_workflow,
     installable_workflow_jobs,
     legacy_ertscript_workflow,
@@ -15,6 +16,7 @@ from .site_config import site_configurations
 __all__ = [
     "add_log_handle_to_root",
     "add_span_processor",
+    "auto_hooked_workflows",
     "ertscript_workflow",
     "forward_model_configuration",
     "get_ip_address",

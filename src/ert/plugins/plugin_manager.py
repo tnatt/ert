@@ -12,8 +12,10 @@ from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 
 from ert.config import (
+    AutoHookedWorkflowConfigs,
     ForwardModelStepDocumentation,
     ForwardModelStepPlugin,
+    HookRuntime,
     KnownQueueOptions,
     LegacyWorkflowConfigs,
     LocalQueueOptions,
@@ -321,6 +323,11 @@ class ErtPluginManager(pluggy.PluginManager):
         self.hook.legacy_ertscript_workflow(config=config)
         return config
 
+    def get_auto_hooked_workflows(self) -> AutoHookedWorkflowConfigs:
+        config = AutoHookedWorkflowConfigs()
+        self.hook.auto_hooked_workflows(config=config)
+        return config
+
     def add_logging_handle_to_root(
         self, logger: logging.Logger
     ) -> list[logging.Handler]:
@@ -388,10 +395,14 @@ def get_site_plugins(
         else {}
     )
 
-    all_workflow_jobs: dict[str, WorkflowJob] = dict[str, WorkflowJob](
-        plugin_manager.get_ertscript_workflows().get_workflows()
-    ) | dict[str, WorkflowJob](
-        plugin_manager.get_legacy_ertscript_workflows().get_workflows()
+    all_workflow_jobs: dict[str, WorkflowJob] = (
+        dict[str, WorkflowJob](plugin_manager.get_ertscript_workflows().get_workflows())
+        | dict[str, WorkflowJob](
+            plugin_manager.get_legacy_ertscript_workflows().get_workflows()
+        )
+        | dict[str, WorkflowJob](
+            plugin_manager.get_auto_hooked_workflows().get_workflows()
+        )
     )
 
     for job_path in installable_workflow_jobs.values():

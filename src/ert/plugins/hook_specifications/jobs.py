@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, no_type_check
 from ert.plugins.plugin_manager import hook_specification
 
 if TYPE_CHECKING:
-    from ert.config import WorkflowConfigs
+    from ert.config import AutoHookedWorkflowConfigs, WorkflowConfigs
     from ert.plugins.plugin_response import PluginResponse
 
 
@@ -30,3 +30,9 @@ def ertscript_workflow(config: WorkflowConfigs) -> None:
 @hook_specification
 def legacy_ertscript_workflow(config: WorkflowConfigs) -> None:
     """Deprecated Variant of the hook ertscript_workflow"""
+
+
+@no_type_check
+@hook_specification
+def auto_hooked_workflows(config: AutoHookedWorkflowConfigs) -> None:
+    """Hook to register workflows that should be automatically hooked."""
